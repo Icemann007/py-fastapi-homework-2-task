@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from database import get_db, MovieModel
 from database.models import CountryModel, GenreModel, ActorModel, LanguageModel
-from schemas.movies import MovieListResponseSchema, MovieDetailSchema, MovieUpdateSchema, MovieCreateSchema
+from schemas.movies import MovieListResponseSchema, MovieDetailSchema, MovieUpdateSchema, MovieCreateSchema, MovieBase
 
 router = APIRouter()
 
@@ -36,10 +36,14 @@ async def get_movies(
     )
     movies = movie_per_page.scalars().all()
 
+    movies_list = [MovieBase.model_validate(movie) for movie in movies]
+
+    base_path = "/theater/movies/"
+
     return MovieListResponseSchema(
-        movies=movies,
-        prev_page=f"/theater/movies/?page={page - 1}&per_page={per_page}" if page > 1 else None,
-        next_page=f"/theater/movies/?page={page + 1}&per_page={per_page}" if page < total_pages else None,
+        movies=movies_list,
+        prev_page=f"{base_path}?page={page - 1}&per_page={per_page}" if page > 1 else None,
+        next_page=f"{base_path}?page={page + 1}&per_page={per_page}" if page < total_pages else None,
         total_pages=total_pages,
         total_items=total_items,
     )
@@ -140,7 +144,7 @@ async def get_movie(
 
     if not movie:
         raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
-    return movie
+    return MovieDetailSchema.model_validate(movie)
 
 
 @router.delete("/movies/{movie_id}/", status_code=204)
@@ -154,7 +158,7 @@ async def delete_movie(
         raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
     await db.delete(movie)
     await db.commit()
-    return movie
+    return None
 
 
 @router.patch("/movies/{movie_id}/")
