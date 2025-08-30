@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from alembic import context
 
+from config.settings import Settings
 from database import models  # noqa: F401
 from database.models import Base
 from database.session_postgresql import sync_postgresql_engine
@@ -26,6 +27,13 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+settings = Settings()
+db_url = (
+    f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+    f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_DB_PORT}/{settings.POSTGRES_DB}"
+)
+config.set_main_option("sqlalchemy.url", db_url)
 
 
 def run_migrations_offline() -> None:
