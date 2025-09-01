@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Response
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -158,10 +158,10 @@ async def delete_movie(
         raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
     await db.delete(movie)
     await db.commit()
-    return None
+    return Response(status_code=204)
 
 
-@router.patch("/movies/{movie_id}/")
+@router.patch("/movies/{movie_id}/", status_code=200)
 async def update_movie(
         movie_id: Annotated[int, Path()],
         update_film: MovieUpdateSchema,
